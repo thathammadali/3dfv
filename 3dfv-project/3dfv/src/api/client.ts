@@ -12,12 +12,22 @@
  */
 import axios from 'axios';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { getToken } from '../services/tokenStorage';
 
-// Resolve base URL: expo config extra → fallback to localhost
+function resolveApiBaseUrl() {
+  const configured = Constants.expoConfig?.extra?.apiBaseUrl as string | undefined;
+
+  if (Platform.OS === 'web' && (!configured || configured.includes('localhost:8000'))) {
+    return 'http://127.0.0.1:8001';
+  }
+
+  return configured || 'http://127.0.0.1:8001';
+}
+
+// Resolve base URL: expo config extra -> local backend fallback
 const API_BASE_URL: string =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ||
-  'http://127.0.0.1:8001';
+  resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
