@@ -434,6 +434,7 @@ export default function App() {
   const addToCartAndStay = (item: MenuItem, extras?: Partial<CartItem>) => {
     addToCart(item, extras);
     setSelectedItem(null);
+    setFlow('home');
   };
 
   const openCustomizer = (item: MenuItem) => {
@@ -686,7 +687,6 @@ export default function App() {
                 addons: [],
                 unitPrice: getPortionPrice(item, getDefaultPortion(item)),
               });
-              setFlow('itemDetail');
             });
           }}
           onCustomize={openCustomizer}
