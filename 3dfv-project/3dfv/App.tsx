@@ -13,7 +13,7 @@
  * UI is preserved exactly as before — only data sources and event handlers changed.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
@@ -35,6 +35,7 @@ import ThanksScreen from './src/screens/ThanksScreen';
 
 import CustomizerModal from './src/modals/CustomizerModal';
 import ChatModal from './src/modals/ChatModal';
+import { styles } from './src/styles/styles';
 
 // API modules
 import {
@@ -158,6 +159,8 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [cartToast, setCartToast] = useState('');
+  const cartToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Checkout state ────────────────────────────────────────────────────────
   const [payment, setPayment] = useState('Cash on Counter');
@@ -203,6 +206,14 @@ export default function App() {
   const subtotal = cart.reduce((sum, line) => sum + getCartLinePrice(line) * line.quantity, 0);
   const tax = Math.round(subtotal * 0.16);
   const total = subtotal + tax;
+
+  useEffect(() => {
+    return () => {
+      if (cartToastTimerRef.current) {
+        clearTimeout(cartToastTimerRef.current);
+      }
+    };
+  }, []);
 
   // ── Restore session on app start ──────────────────────────────────────────
   useEffect(() => {
@@ -417,6 +428,7 @@ export default function App() {
         },
       ];
     });
+    showCartToast(`${item.name} added to cart.`);
   };
 
   const addToCartAndStay = (item: MenuItem, extras?: Partial<CartItem>) => {
@@ -559,6 +571,30 @@ export default function App() {
     setFlow('home');
   }
 
+  function showCartToast(message: string) {
+    if (cartToastTimerRef.current) {
+      clearTimeout(cartToastTimerRef.current);
+    }
+    setCartToast(message);
+    cartToastTimerRef.current = setTimeout(() => {
+      setCartToast('');
+      cartToastTimerRef.current = null;
+    }, 2200);
+  }
+
+  function withCartToast(screen: React.ReactElement) {
+    return (
+      <>
+        {screen}
+        {!!cartToast && (
+          <View style={styles.cartToast}>
+            <Text style={styles.cartToastText}>{cartToast}</Text>
+          </View>
+        )}
+      </>
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // Screen rendering
   // ─────────────────────────────────────────────────────────────────────────
@@ -637,7 +673,7 @@ export default function App() {
   }
 
   if (flow === 'itemDetail' && detailItem) {
-    return (
+    return withCartToast(
       <>
         <ItemDetailScreen
           item={detailItem}
@@ -732,7 +768,7 @@ export default function App() {
   }
 
   // Default — home screen
-  return (
+  return withCartToast(
     <>
       {menuLoading && (
         <View style={{ position: 'absolute', top: 60, left: 0, right: 0, zIndex: 999, alignItems: 'center' }}>

@@ -1208,4 +1208,26 @@ thanksInfoText: {
   marginTop: 3,
 },
 
+cartToast: {
+  position: 'absolute',
+  left: 18,
+  right: 18,
+  bottom: 28,
+  backgroundColor: '#26232A',
+  borderRadius: 16,
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1000,
+  elevation: 8,
+},
+
+cartToastText: {
+  color: '#FFFFFF',
+  fontSize: 14,
+  fontWeight: '900',
+  textAlign: 'center',
+},
+
 });
