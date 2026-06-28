@@ -88,22 +88,45 @@ function adaptBackendUser(backendUser: BackendUser): LoggedInUser {
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'response' in error) {
     const axiosError = error as {
-      response?: { data?: { message?: string; detail?: unknown } };
+      response?: {
+        data?: {
+          message?: string;
+          detail?: unknown;
+        };
+      };
     };
-    const msg = axiosError.response?.data?.message;
-    if (msg) return msg;
-    // 422 validation errors — detail is an array of objects
     const detail = axiosError.response?.data?.detail;
+
     if (typeof detail === 'string') return detail;
     if (Array.isArray(detail) && detail.length > 0) {
-      const first = detail[0] as { msg?: string; loc?: string[] };
-      return first?.msg ? `${first.msg} (${(first.loc ?? []).join('.')})` : 'Validation error';
+      const first = detail[0] as {
+        msg?: string;
+        loc?: Array<string | number>;
+        type?: string;
+      };
+      const field = (first.loc ?? []).filter((part) => part !== 'body').join('.');
+      const lowerField = field.toLowerCase();
+
+      if (lowerField.includes('password') && first.type === 'string_too_short') {
+        return 'Password must be at least 8 characters.';
+      }
+      if (lowerField.includes('email')) {
+        return 'Please enter a valid email address.';
+      }
+      if (lowerField.includes('full_name')) {
+        return 'Please enter your full name.';
+      }
+      if (first?.msg) {
+        return field ? `${first.msg} (${field})` : first.msg;
+      }
     }
+
+    const msg = axiosError.response?.data?.message;
+    if (msg) return msg;
     return 'Something went wrong. Please try again.';
   }
   return 'Network error. Please check your connection.';
 }
-
 export default function App() {
   const [flow, setFlow] = useState<Flow>('splash');
   const [onboardingIndex, setOnboardingIndex] = useState(0);
@@ -253,6 +276,10 @@ export default function App() {
     }
     if (authTab === 'signup' && !name.trim()) {
       setAuthError('Please enter your full name.');
+      return;
+    }
+    if (authTab === 'signup' && password.length < 8) {
+      setAuthError('Password must be at least 8 characters.');
       return;
     }
 
