@@ -10,8 +10,17 @@ from app.database import get_db
 from app.models.order import Order
 from app.models.payment import Payment, PaymentGateway
 from app.models.user import User
-from app.schemas.payment import PaymentCreate, PaymentGatewayCreate, PaymentGatewayUpdate, PaymentStatusUpdate
+from app.schemas.payment import PaymentCreate, PaymentGatewayCreate, PaymentGatewayUpdate, PaymentStatusUpdate, StripePaymentIntentCreate
 from app.services.audit import log_action, model_to_dict
+from app.core.config import get_settings
+import stripe
+
+settings = get_settings()
+if settings.stripe_secret_key and settings.stripe_secret_key != "sk_test_placeholder":
+    stripe.api_key = settings.stripe_secret_key
+else:
+    stripe.api_key = "sk_test_mock_for_now"
+
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -95,3 +104,15 @@ def update_payment_status(payment_id: uuid.UUID, payload: PaymentStatusUpdate, r
     db.commit()
     db.refresh(payment)
     return success_response("Payment status updated", payment)
+
+@router.post("/stripe/create-payment-intent")
+def create_payment_intent(payload: StripePaymentIntentCreate, user: User = Depends(get_current_active_user)) -> dict:
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=payload.amount,
+            currency=payload.currency.lower(),
+            automatic_payment_methods={"enabled": True},
+        )
+        return success_response("PaymentIntent created", {"client_secret": intent.client_secret})
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

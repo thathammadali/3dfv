@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MindAR Compiler</title>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-image-compiler.js"></script>
+</head>
+
+<body>
+    <img id="qr-image" src="qr.png" crossorigin="anonymous" />
+    <button id="compile-btn" onclick="compile()">Compile</button>
+    <a id="download-link" style="display:none">Download</a>
+
+    <script>
+        window.compile = async function () {
+            try {
+                const img = document.getElementById('qr-image');
+                const compiler = new window.MINDAR.IMAGE.Compiler();
+                console.log("Compiling...");
+                await compiler.compileImageTargets([img], (progress) => {
+                    console.log("Progress:", progress);
+                });
+                console.log("Exporting...");
+                const exportedBuffer = await compiler.exportData();
+
+                // POST it to the backend to save
+                fetch('/save-mind', {
+                    method: 'POST',
+                    body: exportedBuffer
+                }).then(() => {
+                    document.title = "Done";
+                    console.log("Saved successfully to backend!");
+                }).catch(e => {
+                    console.error(e);
+                    document.title = "Error";
+                });
+            } catch (e) {
+                console.error(e);
+                document.title = "Error";
+            }
+        }
+    </script>
+</body>
+
+</html>

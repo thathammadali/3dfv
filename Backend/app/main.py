@@ -2,20 +2,31 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.routers import analytics, audit_logs, auth, carts, deal_items, deals, feedback
 from app.routers import inventory, menu_categories, menu_items, orders, payments
-from app.routers import qr_sessions, ratings, roles, users
+from app.routers import qr_sessions, ratings, roles, users, admin_models
 from app.utils.response import error_response, success_response
 
 settings = get_settings()
 
 app = FastAPI(title=settings.app_name, version="2.0.0")
 
+@app.post("/save-mind")
+async def save_mind(request: Request):
+    data = await request.body()
+    with open("static/ar/targets.mind", "wb") as f:
+        f.write(data)
+    return {"status": "ok"}
+
+app.mount("/ar", StaticFiles(directory="static/ar", html=True), name="ar")
+app.mount("/models", StaticFiles(directory="app/3dmodels"), name="models")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[str(origin) for origin in settings.backend_cors_origins],
+    allow_origins=['*'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +48,7 @@ app.include_router(payments.router)
 app.include_router(inventory.router)
 app.include_router(analytics.router)
 app.include_router(audit_logs.router)
+app.include_router(admin_models.router)
 
 
 @app.exception_handler(HTTPException)

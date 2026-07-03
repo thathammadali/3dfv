@@ -52,3 +52,7 @@ class PaymentRead(IDModel):
     gateway_payment_id: str | None
     payment_method: str | None
     raw_response: dict | None
+
+class StripePaymentIntentCreate(BaseModel):
+    amount: int
+    currency: str = Field(default="PKR", min_length=3, max_length=10)

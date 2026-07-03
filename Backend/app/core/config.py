@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     backend_cors_origins: Annotated[
         list[AnyUrl] | list[str], BeforeValidator(assemble_cors_origins)
     ] = []
+    stripe_secret_key: str = "sk_test_placeholder"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
