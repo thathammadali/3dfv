@@ -229,4 +229,8 @@ const setupAR = async () => {
     }
 };
 
-setupAR();
+document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('start-overlay').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    setupAR();
+});

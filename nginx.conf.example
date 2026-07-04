@@ -5,6 +5,8 @@ server {
     location / {
         root /var/www/3dfv/frontend/dist;
         try_files $uri $uri/ /index.html;
+        # Prevent Safari from caching the old React App
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
     }
 
     # 2. AR Viewer
@@ -29,4 +31,26 @@ server {
         # Enable CORS for static assets to be loaded by AR viewer
         add_header Access-Control-Allow-Origin *;
     }
+
+    # 5. 3D Models
+    location /models/ {
+        alias /var/www/3dfv/backend/app/3dmodels/;
+        add_header Access-Control-Allow-Origin *;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/3dfv.atarionsolutions.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/3dfv.atarionsolutions.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+server {
+    if ($host = 3dfv.atarionsolutions.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    server_name 3dfv.atarionsolutions.com;
+    listen 80;
+    return 404; # managed by Certbot
 }

@@ -27,6 +27,8 @@ echo "Combining builds for Nginx..."
 # The AR viewer will live at frontend/dist/ar
 mkdir -p frontend/dist/ar
 cp -r frontend/ar-main/dist/* frontend/dist/ar/
+# Failsafe for older cached clients that might request /targets.mind instead of /ar/targets.mind
+cp frontend/ar-main/dist/targets.mind frontend/dist/targets.mind
 
 echo ""
 echo "✅ Build Complete!"

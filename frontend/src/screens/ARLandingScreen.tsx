@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Image, Linking, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, Linking, Pressable, SafeAreaView, ScrollView, Text, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
 import { MenuItem } from '../types';
@@ -19,13 +19,21 @@ function openModelUrl(item: MenuItem, mode: '3D' | 'AR', onOpenArView: (url: str
 
   if (mode === 'AR') {
     const arUrl = `${backendUrl}/ar/index.html?model=${modelFilename}&v=${new Date().getTime()}`;
-    onOpenArView(arUrl);
+    if (Platform.OS === 'web') {
+      window.location.href = arUrl;
+    } else {
+      onOpenArView(arUrl);
+    }
     return;
   }
 
   // mode === '3D'
   const viewerUrl = `${backendUrl}/ar/3d.html?model=${modelFilename}`;
-  onOpenArView(viewerUrl);
+  if (Platform.OS === 'web') {
+    window.location.href = viewerUrl;
+  } else {
+    onOpenArView(viewerUrl);
+  }
 }
 
 export default function ARLandingScreen({
