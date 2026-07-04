@@ -17,7 +17,7 @@ import { ActivityIndicator, Alert, Platform, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import { StripeProvider } from './src/components/StripeWrapper';
+import { StripeProvider, useStripe } from './src/components/StripeWrapper';
 
 import { CartItem, Category, Flow, LoggedInUser, MenuItem } from './src/types';
 
@@ -31,7 +31,6 @@ import ARLandingScreen from './src/screens/ARLandingScreen';
 import QRScanScreen from './src/screens/QRScanScreen';
 import CartScreen from './src/screens/CartScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
-import CardPaymentScreen from './src/screens/CardPaymentScreen';
 import ThanksScreen from './src/screens/ThanksScreen';
 import ARViewerScreen from './src/screens/ARViewerScreen';
 
@@ -49,7 +48,7 @@ import {
 import type { BackendUser } from './src/api/auth';
 import { getMenuItems } from './src/api/menu';
 import { createOrder } from './src/api/orders';
-import { getGateways, createPayment } from './src/api/payments';
+import { getGateways, createPayment, createPaymentIntent } from './src/api/payments';
 import { saveToken, clearToken, saveUser, getToken } from './src/services/tokenStorage';
 import { getCartLinePrice, getDefaultPortion, getPortionPrice } from './src/utils/pricing';
 
@@ -129,6 +128,9 @@ function getErrorMessage(error: unknown): string {
     if (msg) return msg;
     return 'Something went wrong. Please try again.';
   }
+  if (error instanceof Error) {
+    return error.message;
+  }
   return 'Network error. Please check your connection.';
 }
 function MainApp() {
@@ -147,6 +149,8 @@ function MainApp() {
   const [authError, setAuthError] = useState('');
   const [authPromptMessage, setAuthPromptMessage] = useState('');
   const pendingAuthActionRef = useRef<(() => void) | null>(null);
+  
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   // ── Logged-in user (from backend) ─────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState<LoggedInUser | null>(null);
@@ -170,6 +174,7 @@ function MainApp() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   // ── Derived values ────────────────────────────────────────────────────────
   const isAdmin =
@@ -474,12 +479,15 @@ function MainApp() {
 
   // ── Checkout / Order placement ────────────────────────────────────────────
   async function handlePlaceOrder() {
+    setCheckoutError('');
+
     if (!currentUser) {
       requireAuth(() => setFlow('checkout'));
       return;
     }
 
     if (!customerPhone.trim()) {
+      setCheckoutError('Please enter your phone number to place the order.');
       Alert.alert('Phone Required', 'Please enter your phone number to place the order.');
       return;
     }
@@ -504,10 +512,42 @@ function MainApp() {
       setLastOrderId(orderId);
 
       if (payment === 'Debit/Credit Card') {
-        setFlow('cardPayment');
+        const { data } = await createPaymentIntent(total);
+        if (!data?.client_secret) throw new Error('Unable to initiate payment.');
+
+        const { error: initError } = await initPaymentSheet({
+          merchantDisplayName: '3DFV',
+          paymentIntentClientSecret: data.client_secret,
+          defaultBillingDetails: { name: orderPayload.customer_name }
+        });
+        if (initError) throw new Error(initError.message);
+
+        const { error: presentError } = await presentPaymentSheet();
+        if (presentError) {
+          if (presentError.code !== 'Canceled' && presentError.code !== 'Failed') {
+            throw new Error(presentError.message);
+          }
+          // If canceled, order is still placed, just not paid
+          console.log('Payment canceled:', presentError.message);
+        } else {
+          try {
+            const gateways = await getGateways();
+            const cardGateway = (gateways.data ?? []).find((g) => g.code === 'card_terminal');
+            if (cardGateway) {
+              await createPayment({
+                order_id: orderId,
+                gateway_id: cardGateway.id,
+                amount: total,
+              });
+            }
+          } catch {
+            console.warn('[Payment] Failed to create card payment record');
+          }
+        }
+        setCustomerPhone('');
+        setFlow('thanks');
       } else {
         // Cash — only attempt payment record if user is authenticated
-        // (POST /payments requires a JWT token)
         if (currentUser) {
           try {
             const gateways = await getGateways();
@@ -528,37 +568,12 @@ function MainApp() {
         setFlow('thanks');
       }
     } catch (error) {
-      Alert.alert('Order Failed', getErrorMessage(error));
+      const msg = getErrorMessage(error);
+      setCheckoutError(msg);
+      Alert.alert('Order Failed', msg);
     } finally {
       setCheckoutLoading(false);
     }
-  }
-
-  // ── Card payment handler ──────────────────────────────────────────────────
-  async function handleCardPay() {
-    if (!currentUser) {
-      requireAuth(() => setFlow('checkout'));
-      return;
-    }
-
-    if (!lastOrderId) {
-      setFlow('thanks');
-      return;
-    }
-    try {
-      const gateways = await getGateways();
-      const cardGateway = (gateways.data ?? []).find((g) => g.code === 'card_terminal');
-      if (cardGateway) {
-        await createPayment({
-          order_id: lastOrderId,
-          gateway_id: cardGateway.id,
-          amount: total,
-        });
-      }
-    } catch {
-      console.warn('[Payment] Card payment record creation failed');
-    }
-    setFlow('thanks');
   }
 
   // ── Sign out ──────────────────────────────────────────────────────────────
@@ -753,19 +768,10 @@ function MainApp() {
         customerPhone={customerPhone}
         setCustomerPhone={setCustomerPhone}
         loading={checkoutLoading}
+        errorMessage={checkoutError}
         onBack={() => setFlow('cart')}
         onPlaceOrder={handlePlaceOrder}
         onCardPayment={handlePlaceOrder}
-      />
-    );
-  }
-
-  if (flow === 'cardPayment') {
-    return (
-      <CardPaymentScreen
-        total={total}
-        onBack={() => setFlow('checkout')}
-        onPay={handleCardPay}
       />
     );
   }
@@ -835,8 +841,13 @@ function MainApp() {
 }
 
 export default function App() {
+  const stripePublishableKey = 
+    process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 
+    Constants.expoConfig?.extra?.stripePublishableKey || 
+    'pk_test_placeholder';
+    
   return (
-    <StripeProvider publishableKey="pk_test_placeholder">
+    <StripeProvider publishableKey={stripePublishableKey}>
       <MainApp />
     </StripeProvider>
   );

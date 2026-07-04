@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
 import { CartItem, MenuItem } from '../types';
 import { formatRs } from '../utils/format';
+import { isPizzaItem, getPortionOptions } from '../utils/pricing';
 import { styles } from '../styles/styles';
 
 export default function ItemDetailScreen({
@@ -31,7 +32,20 @@ export default function ItemDetailScreen({
             <Text style={styles.bigTitle}>{item.name}</Text>
             <Text style={styles.mutedText}>{item.category}</Text>
           </View>
-          <Text style={styles.detailPrice}>{formatRs(item.price)}</Text>
+          <View>
+            {isPizzaItem(item) ? (
+              getPortionOptions(item).map((option) => (
+                <View key={option.label} style={styles.priceRowItem}>
+                  <View style={styles.sizeIconBadge}>
+                    <Text style={styles.sizeIconText}>{option.label.charAt(0)}</Text>
+                  </View>
+                  <Text style={styles.priceSmall}>{formatRs(option.price)}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.detailPrice}>{formatRs(item.price)}</Text>
+            )}
+          </View>
         </View>
 
         <View style={styles.detailMetaRow}>

@@ -784,6 +784,37 @@ nextButtonText: {
     textAlign: 'right',
   },
 
+  priceRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    justifyContent: 'flex-end',
+  },
+
+  sizeIconBadge: {
+    backgroundColor: '#35C989',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+  },
+
+  sizeIconText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+
+  priceSmall: {
+    color: '#26232A',
+    fontWeight: '900',
+    fontSize: 11,
+    textAlign: 'right',
+    width: 56,
+  },
+
   visualizeBtn: {
     backgroundColor: '#FFF0DC',
     paddingHorizontal: 8,

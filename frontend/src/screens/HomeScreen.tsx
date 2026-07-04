@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Category, CartItem, MenuItem } from '../types';
 import { formatRs } from '../utils/format';
+import { isPizzaItem, getPortionOptions } from '../utils/pricing';
 import { styles } from '../styles/styles';
 import WeatherCard from '../components/WeatherCard';
 
@@ -193,7 +194,18 @@ export default function HomeScreen({
             </View>
 
             <View style={styles.foodSide}>
-              <Text style={styles.price}>{formatRs(item.price)}</Text>
+              {isPizzaItem(item) ? (
+                getPortionOptions(item).map((option) => (
+                  <View key={option.label} style={styles.priceRowItem}>
+                    <View style={styles.sizeIconBadge}>
+                      <Text style={styles.sizeIconText}>{option.label.charAt(0)}</Text>
+                    </View>
+                    <Text style={styles.priceSmall}>{formatRs(option.price)}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.price}>{formatRs(item.price)}</Text>
+              )}
 
               <Pressable
                 style={styles.visualizeBtn}

@@ -13,6 +13,7 @@ export default function CheckoutScreen({
   customerPhone,
   setCustomerPhone,
   loading,
+  errorMessage,
   onBack,
   onPlaceOrder,
   onCardPayment,
@@ -23,6 +24,7 @@ export default function CheckoutScreen({
   customerPhone: string;
   setCustomerPhone: (value: string) => void;
   loading?: boolean;
+  errorMessage?: string;
   onBack: () => void;
   onPlaceOrder: () => void;
   onCardPayment: () => void;
@@ -82,6 +84,12 @@ export default function CheckoutScreen({
         ))}
 
         <PriceRow label="Payable Amount" value={formatRs(total)} bold />
+
+        {!!errorMessage && (
+          <Text style={{ color: '#E74C3C', marginVertical: 10, textAlign: 'center', fontSize: 16 }}>
+            {errorMessage}
+          </Text>
+        )}
 
         <Pressable 
           style={[styles.primaryBtn, loading && styles.disabledBtn]} 

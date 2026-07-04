@@ -224,6 +224,21 @@ const setupAR = async () => {
             });
         });
     }
+
+    // UI: Rotation Slider Logic
+    const rotSlider = document.getElementById('rotation');
+    const rotVal = document.getElementById('rot-val');
+    if (rotSlider) {
+        rotSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (rotVal) rotVal.textContent = val + '°';
+            trackedItems.forEach(item => {
+                if (item.wrapper) {
+                    item.wrapper.rotation.z = THREE.MathUtils.degToRad(val);
+                }
+            });
+        });
+    }
 };
 
 setupAR();

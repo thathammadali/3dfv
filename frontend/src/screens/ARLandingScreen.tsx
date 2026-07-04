@@ -11,28 +11,21 @@ function openModelUrl(item: MenuItem, mode: '3D' | 'AR', onOpenArView: (url: str
     return;
   }
 
-  // If AR mode, load our MindAR QR experience hosted on the backend
-  if (mode === 'AR') {
-    // Determine the base URL dynamically or fallback to localhost
-    const backendUrl = require('../api/client').API_BASE_URL;
-    
-    // The backend serves 3D models statically from /models/
-    // We pass just the filename to the AR app's ?model= parameter
-    // Assuming model_3d_url might be just a filename for local models
-    // Or we extract the filename from the URL
-    let modelFilename = item.model_3d_url;
-    if (modelFilename.includes('/')) {
-        modelFilename = modelFilename.split('/').pop() || item.model_3d_url;
-    }
+  const backendUrl = require('../api/client').API_BASE_URL;
+  let modelFilename = item.model_3d_url;
+  if (modelFilename.includes('/')) {
+      modelFilename = modelFilename.split('/').pop() || item.model_3d_url;
+  }
 
+  if (mode === 'AR') {
     const arUrl = `${backendUrl}/ar/index.html?model=${modelFilename}`;
     onOpenArView(arUrl);
     return;
   }
 
-  Linking.openURL(item.model_3d_url).catch(() => {
-    Alert.alert(`${mode} model`, 'Unable to open this model link right now.');
-  });
+  // mode === '3D'
+  const viewerUrl = `${backendUrl}/ar/3d.html?model=${modelFilename}`;
+  onOpenArView(viewerUrl);
 }
 
 export default function ARLandingScreen({

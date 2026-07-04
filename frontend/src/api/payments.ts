@@ -63,9 +63,21 @@ export async function createPaymentIntent(
   amount: number,
   currency: string = 'PKR'
 ): Promise<{ data: { client_secret: string } }> {
+  let finalAmount = amount;
+  let finalCurrency = currency;
+  
+  // Stripe might not support PKR for some accounts, so we convert to USD
+  if (currency.toUpperCase() === 'PKR') {
+    const PKR_TO_USD_RATE = 280; // Approximate conversion rate
+    finalAmount = amount / PKR_TO_USD_RATE;
+    finalCurrency = 'USD';
+  }
+
+  // Stripe expects amount in smallest unit (e.g. cents for USD)
+  const amountInSmallestUnit = Math.round(finalAmount * 100);
   const res = await api.post<{ success: boolean; message: string; data: { client_secret: string } }>(
     '/payments/stripe/create-payment-intent',
-    { amount, currency }
+    { amount: amountInSmallestUnit, currency: finalCurrency }
   );
   return res.data;
 }
