@@ -187,17 +187,16 @@ function MainApp() {
   const googleAndroidClientId = (googleExtra.googleAndroidClientId as string | undefined) || '';
   const googleIosClientId = (googleExtra.googleIosClientId as string | undefined) || '';
   const googleClientPlaceholder = 'missing-google-client-id.apps.googleusercontent.com';
-  const googleClientConfigured = Boolean(
-    Platform.select({
-      ios: googleIosClientId,
-      android: googleAndroidClientId,
-      default: googleWebClientId,
-    })
-  );
+  
+  const activeClientId = googleWebClientId || googleClientPlaceholder;
+  
+  const googleClientConfigured = Boolean(googleWebClientId);
   const [googleRequest, , promptGoogleAsync] = Google.useIdTokenAuthRequest({
-    webClientId: googleWebClientId || googleClientPlaceholder,
-    androidClientId: googleAndroidClientId || googleClientPlaceholder,
-    iosClientId: googleIosClientId || googleClientPlaceholder,
+    clientId: activeClientId,
+    webClientId: activeClientId,
+    expoClientId: activeClientId,
+    androidClientId: googleAndroidClientId || activeClientId,
+    iosClientId: googleIosClientId || activeClientId,
     selectAccount: true,
   });
 
