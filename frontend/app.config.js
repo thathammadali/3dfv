@@ -35,7 +35,7 @@ export default {
     extra: {
       // Change this to your backend URL for physical device testing
       apiBaseUrl: (process.env.API_BASE_URL && !process.env.API_BASE_URL.includes('ngrok')) ? process.env.API_BASE_URL : 'http://localhost:8000',
-      googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
+      googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.GOOGLE_WEB_CLIENT_ID || '',
       googleAndroidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID || '',
       googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || '',
       stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || '',
