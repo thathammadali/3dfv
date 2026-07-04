@@ -8,7 +8,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const requestedModel = urlParams.get('model');
 
 const CONFIG = {
-    TARGET_PATH: 'targets.mind',
+    TARGET_PATH: 'targets.mind?v=' + new Date().getTime(),
     SMOOTHING_MIN_CUTOFF: 0.01,
     SMOOTHING_BETA: 0.05,
 
