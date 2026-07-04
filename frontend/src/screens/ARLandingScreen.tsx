@@ -18,7 +18,7 @@ function openModelUrl(item: MenuItem, mode: '3D' | 'AR', onOpenArView: (url: str
   }
 
   if (mode === 'AR') {
-    const arUrl = `${backendUrl}/ar/index.html?model=${modelFilename}`;
+    const arUrl = `${backendUrl}/ar/index.html?model=${modelFilename}&v=${new Date().getTime()}`;
     onOpenArView(arUrl);
     return;
   }
