@@ -268,6 +268,8 @@ nextButtonText: {
     marginTop: 14,
     fontSize: 15,
     color: '#222',
+    // @ts-ignore: Web only property to remove browser focus ring
+    outlineStyle: 'none',
   },
 
   passwordWrap: {
@@ -284,6 +286,8 @@ nextButtonText: {
     paddingVertical: 14,
     fontSize: 15,
     color: '#222',
+    // @ts-ignore: Web only property to remove browser focus ring
+    outlineStyle: 'none',
   },
 
   googleBtn: {
