@@ -183,7 +183,7 @@ function MainApp() {
     currentUser?.role === 'super_admin';
 
   const googleExtra = Constants.expoConfig?.extra ?? {};
-  const googleWebClientId = (googleExtra.googleWebClientId as string | undefined) || '';
+  const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || (googleExtra.googleWebClientId as string | undefined) || '';
   const googleAndroidClientId = (googleExtra.googleAndroidClientId as string | undefined) || '';
   const googleIosClientId = (googleExtra.googleIosClientId as string | undefined) || '';
   const googleClientPlaceholder = 'missing-google-client-id.apps.googleusercontent.com';
