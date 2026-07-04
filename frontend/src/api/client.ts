@@ -14,12 +14,12 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { getToken } from '../services/tokenStorage';
 
-// Resolve base URL: expo config extra → fallback to localhost
 let API_BASE_URL: string =
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ||
   'http://localhost:8000';
 
-if (API_BASE_URL.includes('ngrok')) {
+if (API_BASE_URL.includes('ngrok') && !process.env.EXPO_PUBLIC_API_BASE_URL) {
   console.warn('[API] Overriding ngrok URL with localhost:8000 as requested');
   API_BASE_URL = 'http://localhost:8000';
 }
