@@ -75,6 +75,11 @@
     viewer.addEventListener('progress', (event) => {
       const progress = event.detail.totalProgress;
       updateBar.style.width = `${progress * 100}%`;
+      if (progress === 1) {
+        document.querySelector('.progress-bar').classList.add('hide');
+      } else {
+        document.querySelector('.progress-bar').classList.remove('hide');
+      }
     });
   </script>
 </body>
