@@ -47,21 +47,9 @@ const setupAR = async () => {
     // 2. Setup Three.js Scene
     const { renderer, scene, camera } = mindarThree;
 
-    // FIX: Adjust Camera Near/Far planes to prevent clipping of small objects
-    camera.near = 0.001;
-    camera.far = 10000;
-    camera.updateProjectionMatrix();
-
     // FIX: Pixelation - Set correct resolution and pixel ratio
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // Handle window resize to keep resolution sharp
-    window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    });
 
     // Lighting - Boosted for better visibility
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 5.0);
